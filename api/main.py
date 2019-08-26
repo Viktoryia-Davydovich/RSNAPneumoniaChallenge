@@ -4,8 +4,8 @@ from predict_handler import PredictHandler
 
 
 def make_app():
-    urls = [("/", PredictHandler)]
-    return Application(urls)
+    handlers = [("/", PredictHandler)]
+    return Application(handlers)
 
 
 if __name__ == '__main__':
