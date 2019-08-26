@@ -11,32 +11,39 @@ import CardMedia from "@material-ui/core/CardMedia";
 import { useState } from "react";
 import Card from "@material-ui/core/Card";
 
-function App({ classes }) {
-  const [image, setImage] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+import PredictService from "./PredictService";
+
+function App() {
+  const [image, setImage] = useState(null);
+  const [imagePng, setImagePng] = useState(null);
 
   const handleImageUpload = event => {
     event.preventDefault();
-    const reader = new FileReader();
-    const file = event.target.files[0];
+    setImage(event.target.files[0]);
+  };
 
-    reader.onloadend = () => {
-      setImage(file);
-      setImageUrl(reader.result);
-    };
-
-    reader.readAsDataURL(file);
+  const handleImageSend = event => {
+    PredictService.predictOpacity(image)
+      .then(imagePng => {
+        setImagePng(imagePng);
+        return;
+      })
+      .catch(error => {
+        console.log(error);
+        return;
+      });
   };
 
   return (
     <div className="App">
       <Card>
         <CardActions>
-          <input type="file" onChange={e => handleImageUpload(e)} />
           <label for="file">Upload DICOM image</label>
+          <input type="file" onChange={e => handleImageUpload(e)} />
+          <button onClick={handleImageSend}>Upload</button>
         </CardActions>
         <CardActionArea>
-          <CardMedia image={imageUrl}></CardMedia>
+          <CardMedia image={imageUrl} />
           <CardContent>
             <Table>
               <TableHead>
