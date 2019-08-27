@@ -1,11 +1,15 @@
 import * as axios from "axios";
 
-const baseApiUrl = "http://localhost:8000/";
+const baseApiUrl = "http://localhost:8000";
 
-const predictOpacity = dicomImage => {
+const config = {
+  crossDomain: true
+};
+
+const predictOpacity = dataToSend => {
   return new Promise((resolve, reject) => {
     axios
-      .post(`${baseApiUrl}/predict`, { dicomImage: dicomImage })
+      .post(`${baseApiUrl}/predict`, dataToSend, config)
       .then(result => {
         resolve(result.data);
       })

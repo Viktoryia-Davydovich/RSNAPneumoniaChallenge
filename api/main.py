@@ -3,8 +3,13 @@ from tornado.ioloop import IOLoop
 from predict_handler import PredictHandler
 
 
+class RunHandler(RequestHandler):
+    def get(self):
+        self.write("Running")
+
+
 def make_app():
-    handlers = [("/", PredictHandler)]
+    handlers = [("/", RunHandler), ("/predict", PredictHandler)]
     return Application(handlers)
 
 

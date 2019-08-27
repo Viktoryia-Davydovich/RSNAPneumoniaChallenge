@@ -1,19 +1,52 @@
 from tornado.web import RequestHandler
 import pydicom
-import tf.keras.models
-from skimage import measure, resize
+from skimage import measure
+from skimage.transform import resize
 import numpy as np
+import json
+import scipy.misc
+from pydicom.filebase import DicomBytesIO
+import io
 
 
-class PredictHandler(RequestHandler):
+class BaseHandler(RequestHandler):
+
+    def set_default_headers(self):
+        print("setting headers!!!")
+        self.set_header("access-control-allow-origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "*")
+        self.set_header('Access-Control-Allow-Methods',
+                        'GET, PUT, DELETE, OPTIONS')
+
+    def options(self):
+        self.set_status(204)
+        self.finish()
+
+
+class PredictHandler(BaseHandler):
+    def get(self):
+        self.write("Got!")
+
     def post(self):
-        dicom_image = self.request.files['dicom_image'][0]
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "*")
 
-        image = pydicom.dcmread(dicom_image).pixel
-        image = resize(image, (256, 256))
+        dicom_image_raw = DicomBytesIO(self.request.body)
+        image = pydicom.dcmread(dicom_image_raw).pixel_array
+        image = resize(image, (256, 256), mode="reflect")
         image = np.expand_dims(image, -1)
         image = np.expand_dims(image, 0)
 
+        image = image.reshape((256, 256))
+        image = np.stack([image] * 3, axis=2)
+
+# -> to model -> to draw borders ->
+
+        converted_image = image.tobytes().decode("ISO-8859-1")
+
+        response = json.dumps({'image': converted_image})
+        self.write(response)
+        """
         # if fails use pickle
         path = 'data\saved\my_model.h5'
         model = tf.keras.models.load_model(path)
@@ -35,8 +68,13 @@ class PredictHandler(RequestHandler):
         for box in boxes:
             image_with_boxes = self.draw_border(image, box)
 
-        return (image_with_boxes, boxes)
+        response = {"image": image_with_boxes, "prediction": boxes}
 
+
+"""
+
+
+"""
     def draw_border(image, box):
         color = np.floor(np.random.rand(3) * 256).astype('int')
         border_width = 5
@@ -52,3 +90,4 @@ class PredictHandler(RequestHandler):
         image[y1: y2, x2: x2 + border_width] = color
 
         return image
+"""

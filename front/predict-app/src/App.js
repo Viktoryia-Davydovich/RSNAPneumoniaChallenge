@@ -1,4 +1,6 @@
 import React from "react";
+import { useState } from "react";
+
 import CardContent from "@material-ui/core/CardContent";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -8,24 +10,42 @@ import TableRow from "@material-ui/core/TableRow";
 import CardActionArea from "@material-ui/core/CardActionArea";
 import CardActions from "@material-ui/core/CardActions";
 import CardMedia from "@material-ui/core/CardMedia";
-import { useState } from "react";
 import Card from "@material-ui/core/Card";
+import Button from "@material-ui/core/Button";
+import Typography from "@material-ui/core/Typography";
 
-import PredictService from "./PredictService";
+import { PredictService } from "./PedictService";
 
 function App() {
-  const [image, setImage] = useState(null);
-  const [imagePng, setImagePng] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [isDisabled, setDisabled] = useState(true);
+
+  //const [receivedImage, setReceivedImage] = useState("");
+  //const [receivedPrediction, setReceivedPrediction] = useState(null);
 
   const handleImageUpload = event => {
     event.preventDefault();
-    setImage(event.target.files[0]);
+    setUploadedImage(event.target.files[0]);
+    setDisabled(false);
   };
 
   const handleImageSend = event => {
-    PredictService.predictOpacity(image)
-      .then(imagePng => {
-        setImagePng(imagePng);
+    console.log(uploadedImage);
+    PredictService.predictOpacity(uploadedImage)
+      .then(response => {
+        var reader = new FileReader();
+        reader.onload = (function(self) {
+          return function(e) {
+            document.getElementById("img").src = e.target.result;
+            console.log(e.target.result);
+          };
+        })(this);
+
+        reader.readAsDataURL(new Blob([response.image]));
+
+        //let data = btoa(unescape(encodeURIComponent(response.image)));
+        //setReceivedImage("data:image/png;base64," + data);
+        //setReceivedPrediction(response.prediction);
         return;
       })
       .catch(error => {
@@ -38,12 +58,19 @@ function App() {
     <div className="App">
       <Card>
         <CardActions>
-          <label for="file">Upload DICOM image</label>
-          <input type="file" name="dicomImage" onChange={handleImageUpload} />
-          <button onClick={handleImageSend}>Upload</button>
+          <Typography>Upload DICOM image</Typography>
+          <input type="file" name="" onChange={handleImageUpload} />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleImageSend}
+            disabled={isDisabled}
+          >
+            Predict
+          </Button>
         </CardActions>
         <CardActionArea>
-          <CardMedia image={imageUrl} />
+          <img id="img" />
           <CardContent>
             <Table>
               <TableHead>
