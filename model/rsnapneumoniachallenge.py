@@ -321,10 +321,12 @@ def show_predict(path_to_image, model):
         boxes.append([x,y,width,height])
   return boxes, path
 
+restored_model = tf.keras.models.load_model("/content/full_model.h5", custom_objects={'mean_iou': mean_iou})
+
 path = '/content/test_images/22e960f0-e303-4fe4-9d3a-a7533ad6552c.dcm'
 
-data, fn = show_predict(path, model)
+data, fn = show_predict(path, restored_model)
 
-data[0][]
+data
 
 show_with_boxes(data, fn)
