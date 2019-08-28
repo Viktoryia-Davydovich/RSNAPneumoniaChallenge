@@ -39,12 +39,11 @@ class PredictHandler(BaseHandler):
         tf.keras.utils.get_custom_objects().update(
             {'swish': Swish(self.swish)})
 
+
 # model load
-        path_to_model = 'D:\RSNAPreumoniaChallenge\model\model.json'
-        json_file = open(path_to_model, 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        loaded_model = tf.keras.models.model_from_json(loaded_model_json)
+        path_to_model = 'D:\RSNAPreumoniaChallenge\model\full_model.h5'
+        loaded_model = tf.keras.models.load_model(
+            path_to_model, custom_objects={'mean_iou': self.mean_iou})
 
 # make prediction
         # boxes - list of boxes (lists of x,y,w,h), confidence - list of cond per each box
