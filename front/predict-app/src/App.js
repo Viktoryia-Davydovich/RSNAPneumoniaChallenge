@@ -20,8 +20,9 @@ function App() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isDisabled, setDisabled] = useState(true);
 
-  //const [receivedImage, setReceivedImage] = useState("");
-  //const [receivedPrediction, setReceivedPrediction] = useState(null);
+  const [receivedImage, setReceivedImage] = useState("");
+  const receivedBoxes = {};
+  const [rowsData, setRowsData] = useState([]);
 
   const handleImageUpload = event => {
     event.preventDefault();
@@ -30,22 +31,23 @@ function App() {
   };
 
   const handleImageSend = event => {
-    console.log(uploadedImage);
     PredictService.predictOpacity(uploadedImage)
       .then(response => {
-        var reader = new FileReader();
-        reader.onload = (function(self) {
-          return function(e) {
-            document.getElementById("img").src = e.target.result;
-            console.log(e.target.result);
-          };
-        })(this);
+        let data = btoa(unescape(encodeURIComponent(response.image)));
+        setReceivedImage("data:image/jpg;base64," + data);
 
-        reader.readAsDataURL(new Blob([response.image]));
+        const confidence = JSON.parse(response.confidence);
+        const returnedData = {};
+        for (let i = 0; i < response.boxes.length; i++) {
+          returnedData[confidence[i]] = response.boxes[i];
+        }
+        Object.assign(receivedBoxes, returnedData);
 
-        //let data = btoa(unescape(encodeURIComponent(response.image)));
-        //setReceivedImage("data:image/png;base64," + data);
-        //setReceivedPrediction(response.prediction);
+        setRowsData(
+          Object.entries(receivedBoxes)
+            .map(box => [+box[0]].concat(box[1]))
+            .slice(0)
+        );
         return;
       })
       .catch(error => {
@@ -70,7 +72,7 @@ function App() {
           </Button>
         </CardActions>
         <CardActionArea>
-          <img id="img" />
+          <img src={receivedImage} />
           <CardContent>
             <Table>
               <TableHead>
@@ -83,13 +85,15 @@ function App() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                <TableRow>
-                  <TableCell>...</TableCell>
-                  <TableCell>...</TableCell>
-                  <TableCell>...</TableCell>
-                  <TableCell>...</TableCell>
-                  <TableCell>...</TableCell>
-                </TableRow>
+                {rowsData.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{row[0]}</TableCell>
+                    <TableCell>{row[1]}</TableCell>
+                    <TableCell>{row[2]}</TableCell>
+                    <TableCell>{row[3]}</TableCell>
+                    <TableCell>{row[4]}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
