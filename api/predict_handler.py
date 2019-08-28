@@ -7,6 +7,7 @@ import json
 import scipy.misc
 from pydicom.filebase import DicomBytesIO
 import io
+import tensorflow as tf
 
 
 class BaseHandler(RequestHandler):
@@ -31,51 +32,70 @@ class PredictHandler(BaseHandler):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "*")
 
+# reshape and resize image for
         dicom_image_raw = DicomBytesIO(self.request.body)
-        image = pydicom.dcmread(dicom_image_raw).pixel_array
-        image = resize(image, (256, 256), mode="reflect")
+
+# model load
+        path_to_model = 'model\model.json'
+        json_file = open(path_to_model, 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        loaded_model = tf.keras.models.model_from_json(loaded_model_json)
+
+# make prediction
+        # boxes - list of boxes (lists of x,y,w,h), confidence - list of cond per each box
+        boxes, confidence = self.predict(dicom_image_raw, loaded_model)
+        image_with_boxes = self.return_with_boxes(boxes, dicom_image_raw)
+
+# converting image to a string of bytes to send via response
+        converted_image = image_with_boxes.tobytes().decode("ISO-8859-1")
+
+# if boxes empty, which means, no pneumonia found
+        if not boxes:
+            response = json.dumps({'image': converted_image})
+        else:
+            response = json.dumps(
+                {'image': converted_image, 'boxes': boxes, 'confidence': confidence})
+
+        self.write(response)
+
+    def predict(self, image_raw, model):
+        image = pydicom.dcmread(image_raw).pixel_array
+        image = resize(image, (256, 256))
         image = np.expand_dims(image, -1)
         image = np.expand_dims(image, 0)
 
-        image = image.reshape((256, 256))
-        image = np.stack([image] * 3, axis=2)
+        prediction = model.predict(image)
+        for pred in prediction:
+            pred = resize(pred, (1024, 1024), mode='reflect')
+            comp = pred[:, :, 0] > 0.5
+            comp = measure.label(comp)
+            boxes = []
+            confidence_per_box = []
+            for region in measure.regionprops(comp):
+                y, x, y2, x2 = region.bbox
+                height = y2 - y
+                width = x2 - x
+                confidence = np.mean(pred[y:y+height, x:x+width])
+                boxes.append([x, y, width, height])
+                confidence_per_box.append(confidence)
+        return boxes, confidence_per_box
 
-# -> to model -> to draw borders ->
+    def return_with_boxes(self, boxes, image_raw):
+        image = pydicom.dcmread(image_raw).pixel_array
+        if boxes:
+            image_rgb = np.stack([image] * 3, axis=2)
 
-        converted_image = image.tobytes().decode("ISO-8859-1")
+            # overlay colored borders onto opacities
+            for box in boxes:
+                image_rgb_border = self.draw_border(image_rgb, box)
+            return image_rgb_border
 
-        response = json.dumps({'image': converted_image})
-        self.write(response)
-        """
-        # if fails use pickle
-        path = 'data\saved\my_model.h5'
-        model = tf.keras.models.load_model(path)
+        else:
+            return image
 
-        predicted_mask = model.predict(image)
-
-        # where confidence > 0.5 - true
-        comp = predicted_mask[:, :, 0] > 0.5
-        comp = measure.label(comp)
-        boxes = []
-        for region in measure.regionprops(comp):
-            y, x, y2, x2 = region.bbox
-            height = y2 - y
-            width = x2 - x
-            boxes.append(x, y, width, height)
-
-        image = image.reshape((256, 256))
-        image = np.stack([image] * 3, axis=2)
-        for box in boxes:
-            image_with_boxes = self.draw_border(image, box)
-
-        response = {"image": image_with_boxes, "prediction": boxes}
-
-
-"""
-
-
-"""
-    def draw_border(image, box):
+        # Drawing colored borders aroun opacities
+    def draw_border(self, image, box):
         color = np.floor(np.random.rand(3) * 256).astype('int')
         border_width = 5
 
@@ -90,4 +110,3 @@ class PredictHandler(BaseHandler):
         image[y1: y2, x2: x2 + border_width] = color
 
         return image
-"""
