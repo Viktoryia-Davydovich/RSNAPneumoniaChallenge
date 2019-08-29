@@ -5,13 +5,11 @@ import scipy.misc
 
 
 def predict(image, model):
-    image = resize(image, (256, 256))
     image = np.expand_dims(image, -1)
     image = np.expand_dims(image, 0)
 
     prediction = model.predict(image)
     for pred in prediction:
-        # pred = resize(pred, (1024, 1024), mode='reflect')
         comp = pred[:, :, 0] > 0.5
         comp = measure.label(comp)
         boxes = []
@@ -38,12 +36,12 @@ def return_with_boxes(boxes, image):
     else:
         return image
 
-        # Drawing colored borders aroun opacities
+# Drawing colored borders aroun opacities
 
 
 def draw_border(image, box):
     color = np.floor(np.random.rand(3) * 256).astype('int')
-    border_width = 3
+    border_width = 2
 
     box_int = [int(value) for value in box]
     x1, y1, h, w = box_int

@@ -2,11 +2,12 @@ from tornado.web import RequestHandler
 import pydicom
 import json
 from pydicom.filebase import DicomBytesIO
-import io
 import tensorflow as tf
 import PIL.Image
 import base64
 from io import BytesIO
+from skimage.transform import resize
+import numpy as np
 
 from model import Swish, swish, mean_iou, create_network
 from prediction import predict, return_with_boxes
@@ -34,9 +35,9 @@ class PredictHandler(BaseHandler):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "*")
 
-        # reshape and resize image for
         dicom_image_raw = DicomBytesIO(self.request.body)
         image = pydicom.dcmread(dicom_image_raw).pixel_array
+        image = resize(image, (256, 256))
 
         # model loading
         tf.keras.utils.get_custom_objects().update(
@@ -57,7 +58,8 @@ class PredictHandler(BaseHandler):
 
         # converting image to a string of bytes to send via response
         buffered = BytesIO()
-        PIL.Image.fromarray(image_with_boxes).save(buffered, format="PNG")
+        PIL.Image.fromarray(
+            (image_with_boxes * 255).round().astype(np.uint8)).save(buffered, format="PNG")
         converted_image = bytes(
             "data:image/png;base64,", encoding='utf-8') + base64.b64encode(buffered.getvalue())
         converted_image = converted_image.decode()

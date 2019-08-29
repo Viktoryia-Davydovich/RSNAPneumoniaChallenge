@@ -23,6 +23,9 @@ function App() {
   const [receivedImage, setReceivedImage] = useState("");
   const receivedBoxes = {};
   const [rowsData, setRowsData] = useState([]);
+  const imgStyle = {
+    textAlign: "center"
+  };
 
   const handleImageUpload = event => {
     event.preventDefault();
@@ -48,7 +51,7 @@ function App() {
             .map(box => [+box[0]].concat(box[1]))
             .slice(0)
         );
-
+        setPneumonia("");
         return;
       })
       .catch(error => {
@@ -77,11 +80,11 @@ function App() {
           Predict
         </Button>
       </CardActions>
-      <CardActionArea>
+      <CardActionArea style={imgStyle}>
         <Typography variant="h1" component="h2" gutterBottom>
           {pneumonia}
         </Typography>
-        <img src={receivedImage} class="dicomImage" />
+        <img src={receivedImage} />
         <CardContent>
           <Table>
             <TableHead>
