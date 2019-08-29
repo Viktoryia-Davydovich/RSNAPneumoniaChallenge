@@ -43,7 +43,7 @@ def return_with_boxes(boxes, image):
 
 def draw_border(image, box):
     color = np.floor(np.random.rand(3) * 256).astype('int')
-    border_width = 5
+    border_width = 3
 
     box_int = [int(value) for value in box]
     x1, y1, h, w = box_int

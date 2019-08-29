@@ -5,6 +5,8 @@ from pydicom.filebase import DicomBytesIO
 import io
 import tensorflow as tf
 import PIL.Image
+import base64
+from io import BytesIO
 
 from model import Swish, swish, mean_iou, create_network
 from prediction import predict, return_with_boxes
@@ -54,10 +56,12 @@ class PredictHandler(BaseHandler):
         image_with_boxes = return_with_boxes(boxes, image)
 
         # converting image to a string of bytes to send via response
-        converted_image = PIL.Image.fromarray(
-            image_with_boxes).tobytes().decode("iso-8859-1")
+        buffered = BytesIO()
+        PIL.Image.fromarray(image_with_boxes).save(buffered, format="PNG")
+        converted_image = bytes(
+            "data:image/png;base64,", encoding='utf-8') + base64.b64encode(buffered.getvalue())
+        converted_image = converted_image.decode()
         confidence = str(confidence)
-
         # if boxes empty, which means, no pneumonia found
         if not boxes:
             response = json.dumps({'image': converted_image})

@@ -9,14 +9,15 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import CardActionArea from "@material-ui/core/CardActionArea";
 import CardActions from "@material-ui/core/CardActions";
-import CardMedia from "@material-ui/core/CardMedia";
 import Card from "@material-ui/core/Card";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
+import CardMedia from "@material-ui/core/CardMedia";
 
 import { PredictService } from "./PedictService";
 
 function App() {
+  const [pneumonia, setPneumonia] = useState("");
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isDisabled, setDisabled] = useState(true);
 
@@ -33,8 +34,8 @@ function App() {
   const handleImageSend = event => {
     PredictService.predictOpacity(uploadedImage)
       .then(response => {
-        let data = btoa(unescape(encodeURIComponent(response.image)));
-        setReceivedImage("data:application/octet-stream;base64," + data);
+        console.log(response.image);
+        setReceivedImage(response.image);
 
         const confidence = JSON.parse(response.confidence);
         const returnedData = {};
@@ -42,13 +43,20 @@ function App() {
           returnedData[confidence[i]] = response.boxes[i];
         }
         Object.assign(receivedBoxes, returnedData);
-
+        console.log(receivedBoxes);
         setRowsData(
           Object.entries(receivedBoxes)
             .map(box => [+box[0]].concat(box[1]))
             .slice(0)
         );
+
         return;
+      })
+      .catch(error => {
+        if (error.message.match("Unexpected token u in JSON at position 0")) {
+          setRowsData([].slice(0));
+          setPneumonia("No pneumonia found");
+        } else throw error;
       })
       .catch(error => {
         console.log(error);
@@ -72,7 +80,10 @@ function App() {
           </Button>
         </CardActions>
         <CardActionArea>
-          <img src={receivedImage} />
+          <Typography variant="h1" component="h2" gutterBottom>
+            {pneumonia}
+          </Typography>
+          <img src={receivedImage} class="dicomImage" />
           <CardContent>
             <Table>
               <TableHead>
