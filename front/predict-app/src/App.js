@@ -19,10 +19,10 @@ function App() {
   const [pneumonia, setPneumonia] = useState("");
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isDisabled, setDisabled] = useState(true);
-
   const [receivedImage, setReceivedImage] = useState("");
   const receivedBoxes = {};
   const [rowsData, setRowsData] = useState([]);
+
   const imgStyle = {
     textAlign: "center"
   };
@@ -36,7 +36,6 @@ function App() {
   const handleImageSend = event => {
     PredictService.predictOpacity(uploadedImage)
       .then(response => {
-        console.log(response.image);
         setReceivedImage(response.image);
 
         const confidence = JSON.parse(response.confidence);
@@ -45,7 +44,6 @@ function App() {
           returnedData[confidence[i]] = response.boxes[i];
         }
         Object.assign(receivedBoxes, returnedData);
-        console.log(receivedBoxes);
         setRowsData(
           Object.entries(receivedBoxes)
             .map(box => [+box[0]].concat(box[1]))

@@ -39,10 +39,8 @@ class PredictHandler(BaseHandler):
         image = pydicom.dcmread(dicom_image_raw).pixel_array
         image = resize(image, (256, 256))
 
-        # model loading
         tf.keras.utils.get_custom_objects().update(
             {'swish': Swish(swish)})
-        # create network and compiler
         pneumonia_model = create_network(
             input_size=256, channels=32, n_blocks=2, depth=4)
         pneumonia_model.compile(optimizer='adam',
@@ -51,12 +49,9 @@ class PredictHandler(BaseHandler):
         pneumonia_model.load_weights(
             'D:\\RSNAPreumoniaChallenge\\saved\\full_model_sess.hdf5')
 
-        # make prediction
-        # boxes - list of boxes (lists of x,y,w,h), confidence - list of cond per each box
         boxes, confidence = predict(image, pneumonia_model)
         image_with_boxes = return_with_boxes(boxes, image)
 
-        # converting image to a string of bytes to send via response
         buffered = BytesIO()
         PIL.Image.fromarray(
             (image_with_boxes * 255).round().astype(np.uint8)).save(buffered, format="PNG")
@@ -64,7 +59,6 @@ class PredictHandler(BaseHandler):
             "data:image/png;base64,", encoding='utf-8') + base64.b64encode(buffered.getvalue())
         converted_image = converted_image.decode()
         confidence = str(confidence)
-        # if boxes empty, which means, no pneumonia found
         if not boxes:
             response = json.dumps({'image': converted_image})
         else:

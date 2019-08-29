@@ -28,7 +28,6 @@ def return_with_boxes(boxes, image):
     if boxes:
         image_rgb = np.stack([image] * 3, axis=2)
 
-        # overlay colored borders onto opacities
         for box in boxes:
             image_rgb_border = draw_border(image_rgb, box)
         return image_rgb_border
