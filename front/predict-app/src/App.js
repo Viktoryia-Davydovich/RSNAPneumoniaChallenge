@@ -34,7 +34,7 @@ function App() {
     PredictService.predictOpacity(uploadedImage)
       .then(response => {
         let data = btoa(unescape(encodeURIComponent(response.image)));
-        setReceivedImage("data:image/jpg;base64," + data);
+        setReceivedImage("data:application/octet-stream;base64," + data);
 
         const confidence = JSON.parse(response.confidence);
         const returnedData = {};

@@ -3,3 +3,4 @@
 /front/predict-app/node_modules
 /front/node_modules
 /data
+/model/full_model.h5
