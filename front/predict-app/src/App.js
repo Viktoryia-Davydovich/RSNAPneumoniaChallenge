@@ -12,7 +12,6 @@ import CardActions from "@material-ui/core/CardActions";
 import Card from "@material-ui/core/Card";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
-import CardMedia from "@material-ui/core/CardMedia";
 
 import { PredictService } from "./PedictService";
 
@@ -65,52 +64,50 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Card>
-        <CardActions>
-          <Typography>Upload DICOM image</Typography>
-          <input type="file" name="" onChange={handleImageUpload} />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleImageSend}
-            disabled={isDisabled}
-          >
-            Predict
-          </Button>
-        </CardActions>
-        <CardActionArea>
-          <Typography variant="h1" component="h2" gutterBottom>
-            {pneumonia}
-          </Typography>
-          <img src={receivedImage} class="dicomImage" />
-          <CardContent>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Confidence</TableCell>
-                  <TableCell>X</TableCell>
-                  <TableCell>Y</TableCell>
-                  <TableCell>W</TableCell>
-                  <TableCell>H</TableCell>
+    <Card>
+      <CardActions>
+        <Typography>Upload DICOM image</Typography>
+        <input type="file" name="" onChange={handleImageUpload} />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleImageSend}
+          disabled={isDisabled}
+        >
+          Predict
+        </Button>
+      </CardActions>
+      <CardActionArea>
+        <Typography variant="h1" component="h2" gutterBottom>
+          {pneumonia}
+        </Typography>
+        <img src={receivedImage} class="dicomImage" />
+        <CardContent>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Confidence</TableCell>
+                <TableCell>X</TableCell>
+                <TableCell>Y</TableCell>
+                <TableCell>W</TableCell>
+                <TableCell>H</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rowsData.map((row, i) => (
+                <TableRow key={i}>
+                  <TableCell>{row[0]}</TableCell>
+                  <TableCell>{row[1]}</TableCell>
+                  <TableCell>{row[2]}</TableCell>
+                  <TableCell>{row[3]}</TableCell>
+                  <TableCell>{row[4]}</TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {rowsData.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{row[0]}</TableCell>
-                    <TableCell>{row[1]}</TableCell>
-                    <TableCell>{row[2]}</TableCell>
-                    <TableCell>{row[3]}</TableCell>
-                    <TableCell>{row[4]}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </CardActionArea>
-      </Card>
-    </div>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </CardActionArea>
+    </Card>
   );
 }
 
